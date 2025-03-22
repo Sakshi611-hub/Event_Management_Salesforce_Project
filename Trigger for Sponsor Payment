@@ -1,0 +1,14 @@
+trigger SponsorPaymentTrigger on Sponsor__c (after update) {
+    List<Sponsor__c> sponsorsToUpdate = new List<Sponsor__c>();
+
+    for (Sponsor__c sponsor : Trigger.new) {
+        if (sponsor.Payment_Status__c == 'Paid' && sponsor.Payment_Status__c != Trigger.oldMap.get(sponsor.Id).Payment_Status__c) {
+            sponsor.Status__c = 'Paid';
+            sponsorsToUpdate.add(sponsor);
+        }
+    }
+    
+    if (!sponsorsToUpdate.isEmpty()) {
+        update sponsorsToUpdate;
+    }
+}
