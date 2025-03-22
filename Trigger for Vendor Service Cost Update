@@ -1,0 +1,20 @@
+trigger VendorTrigger on Vendor__c (after insert, after update) {
+    Set<Id> vendorIds = new Set<Id>();
+    
+    if (Trigger.isInsert || Trigger.isUpdate) {
+        for (Vendor__c vendor : Trigger.new) {
+            vendorIds.add(vendor.Id);
+        }
+    }
+    
+    // Query vendors to update cost if necessary
+    List<Vendor__c> vendorsToUpdate = [SELECT Id, Service_Cost__c FROM Vendor__c WHERE Id IN :vendorIds];
+    
+    for (Vendor__c vendor : vendorsToUpdate) {
+        if (vendor.Service_Cost__c < 0) {
+            vendor.Service_Cost__c = 0;  // Prevent negative values
+        }
+    }
+    
+    update vendorsToUpdate;
+}
