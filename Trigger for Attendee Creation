@@ -1,0 +1,24 @@
+trigger AttendeeTrigger on Attendee__c (after insert, after update, after delete) {
+    Set<Id> eventIds = new Set<Id>();
+    
+    if(Trigger.isInsert || Trigger.isUpdate) {
+        for (Attendee__c attendee : Trigger.new) {
+            eventIds.add(attendee.Event__c);
+        }
+    }
+    
+    if (Trigger.isDelete) {
+        for (Attendee__c attendee : Trigger.old) {
+            eventIds.add(attendee.Event__c);
+        }
+    }
+    
+    // Query events and update attendee count
+    List<Event__c> eventsToUpdate = [SELECT Id, Attendee_Count__c, (SELECT Id FROM Attendees__r) FROM Event__c WHERE Id IN :eventIds];
+    
+    for (Event__c event : eventsToUpdate) {
+        event.Attendee_Count__c = event.Attendees__r.size();
+    }
+    
+    update eventsToUpdate;
+}
